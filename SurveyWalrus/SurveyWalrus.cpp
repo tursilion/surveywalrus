@@ -17,13 +17,13 @@
 // generate_table
 
 #include <stdio.h>
-#include <io.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
+#include <ctype.h>
 
 #define LOCK "lockfile"
 #define SYSTEMS "systems.txt"
@@ -33,11 +33,14 @@ int lock = -1;
 
 #ifdef WIN32
 #include <Windows.h>
+#include <io.h>
 #define open _open
 #define close _close
 #define unlink _unlink
-#define stricmp _stricmp
+#define strcasecmp _stricmp
 #define S_IRWXU (_S_IREAD|_S_IWRITE)
+#else
+#include <unistd.h>
 #endif
 
 // list of projects
@@ -297,7 +300,7 @@ void add_vote(int argc, char *argv[]) {
             // find the project in the list
             proj = -1;
             for (int idx=0; idx<cnt; ++idx) {
-                if (0 == stricmp(projects[idx], buf)) {
+                if (0 == strcasecmp(projects[idx], buf)) {
                     proj = idx;
                     break;
                 }
