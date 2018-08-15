@@ -407,6 +407,10 @@ void get_scores(int argc, char *argv[]) {
     // get_scores
     // the weighting assumes that all projects are scored at the same time
     int num_projects, num_systems;
+    int isHtml = 0;
+    if ((argc > 2)&&(0 == strcmp(argv[2],"html"))) {
+      isHtml = 1;
+    }
 
     // get labels into memory
     // so we need to read the list of projects first
@@ -416,6 +420,8 @@ void get_scores(int argc, char *argv[]) {
     // then we read in the list of systems
     num_systems = load_systems();
     printf("Loaded %d systems...\n", num_systems);
+
+    if (isHtml) printf("<br>\n");
 
     // we need a 2D array - projects to systems. 
     // struct _scores {
@@ -430,13 +436,21 @@ void get_scores(int argc, char *argv[]) {
     for (int proj = 0; proj < num_projects; ++proj) {
         char buf[128];
 
-        printf("Checking '%s'...\n", projects[proj]);
+	if (isHtml) {
+		printf("<!-- Checking '%s'... -->\n", projects[proj]);
+	} else {
+		printf("Checking '%s'...\n", projects[proj]);
+	}
         memcpy(scores[proj].name, projects[proj], 128);
 
         sprintf(buf, PREFIX, proj);
         FILE *fp = fopen(buf, "r");
         if (NULL == fp) {
-            printf("Failed to open '%s' for project '%s', code %d\n", buf, projects[proj], errno);
+            if (isHtml) {
+              printf("<!-- Failed to open '%s' for project '%s', code %d -->\n", buf, projects[proj], errno);
+	    } else {
+              printf("Failed to open '%s' for project '%s', code %d\n", buf, projects[proj], errno);
+	    }
             continue;
         }
 
@@ -467,7 +481,11 @@ void get_scores(int argc, char *argv[]) {
     }
 
     // Sort the array by system total
-    printf("Sorting...\n");
+    if (isHtml) {
+        printf("<!-- Sorting... -->\n");
+    } else {
+        printf("Sorting...\n");
+    }
     qsort(scores, num_projects, sizeof(scores[0]), sortscore);
 
     int max = scores[0].ranking;
@@ -478,7 +496,7 @@ void get_scores(int argc, char *argv[]) {
 
     // And finally, output the list: 
 
-    if ((argc > 2)&&(0 == strcmp(argv[2],"html"))) {
+    if (isHtml) {
         // html output
         printf("<table style=\"width:100%%\">\n");
         printf("<tr>\n");
@@ -486,7 +504,7 @@ void get_scores(int argc, char *argv[]) {
         for (int idx=0; idx<num_systems; ++idx) {
             char *p = systems[idx] + strlen(systems[idx]) + 1;
             if (p > systems[idx]+127) p = "";
-            printf("<th align=\"left\"><div class=\"tooltip\">%s\n", systems[idx]);
+            printf("<th align=\"left\"><div class=\"system\">%s\n", systems[idx]);
             printf("  <span class=\"tooltiptext\">%s</span>\n", p);
             printf("</div></th>\n");
         }
@@ -543,7 +561,7 @@ void generate_table(int argc, char *argv[]) {
     printf("Loaded %d systems...\n", num_systems);
 
     // html output
-    printf("<form action=\"/private-cgi/walrus.php\" method=\"post\">\n");
+    printf("<form action=\"/cgi-bin/walrusscore.cgi\" method=\"post\">\n");
     printf("<table style=\"width:100%%\" border=\"1\">\n");
     printf("<tr>\n");
     printf("<th align=\"left\">Project</th> \n");
@@ -575,17 +593,6 @@ void generate_table(int argc, char *argv[]) {
 
 int main(int argc, char *argv[])
 {
-    // acquire the lockfile
-    int cnt = 100;
-    while (!getLock()) {
-        printf("... waiting for lock...\n");
-        delay(500);
-        if (--cnt < 1) {
-            printf("timing out, sorry!\n");
-            return 1;
-        }
-    }
-
     // set the working directory
 #ifdef WIN32
     // this is only for debug
@@ -596,6 +603,17 @@ int main(int argc, char *argv[])
         return 1;
     }
 #endif
+
+    // acquire the lockfile
+    int cnt = 100;
+    while (!getLock()) {
+        printf("... waiting for lock...\n");
+        delay(500);
+        if (--cnt < 1) {
+            printf("timing out, sorry!\n");
+            return 1;
+        }
+    }
 
     // do what we're told to do
     if (argc<2) {
