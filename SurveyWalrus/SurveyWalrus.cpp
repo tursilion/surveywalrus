@@ -13,7 +13,7 @@
 // dump_projects
 // dump_systems
 // get_scores [html]
-// add_vote STDIN -> <project_name or index#> <score> <score>...
+// add_vote <ip_address>, then on STDIN -> <project_name or index#> <score> <score>...
 // generate_table
 
 #include <stdio.h>
@@ -29,6 +29,7 @@
 #define SYSTEMS "systems.txt"
 #define PROJECTS "projects.txt"
 #define PREFIX "project%03d.txt"
+#define IPFILE "ipfile.txt"
 int lock = -1;
 
 #ifdef WIN32
@@ -268,7 +269,7 @@ int load_systems() {
 }
 
 void add_vote(int argc, char *argv[]) {
-    // add_vote 
+    // add_vote <ip_address>
     // reads from STDIN, lines of: <project_name> <score> <score>...
     // we need to find the project in the input and use that to update the
     // projects file. To ensure we get them all, we'll read in a list
@@ -277,6 +278,51 @@ void add_vote(int argc, char *argv[]) {
     char fn[128];
     int cnt, proj;
 
+    // first check whether this IP is already in use
+    // since we can't trust the input, we keep only the digits
+    if (argc < 2) {
+        // no ip address, ignore the input
+        printf("You didn't say where you are calling from!\n");
+        return;
+    }
+    // reuse fn and buf for this...
+    strncpy(buf, argv[1], sizeof(buf));
+    buf[sizeof(buf)-1]='\0';
+    for (unsigned int idx=0; idx<strlen(buf); ++idx) {
+        if (buf[idx]=='.') {
+            // don't keep any punctuation, but
+            // if we don't keep a separator then
+            // 12.1 and 1.12 will look the same ;)
+            buf[idx]='q';
+        } else if ((buf[idx]<'0')||(buf[idx]>'9')) {
+            // delete the character
+            memcpy(&buf[idx], &buf[idx+1], strlen(&buf[idx]));
+            --idx;  // to account for the pending increment
+        }
+    }
+    FILE *fp = fopen(IPFILE, "r");
+    if (NULL != fp) {
+        // we have one, so scan it
+        while (!feof(fp)) {
+            if (NULL == fgets(fn, sizeof(fn), fp)) {
+                break;
+            }
+            strip(fn);
+            if (0 == strcmp(fn, buf)) {
+                // already voted today... ignore the input
+                printf("<!- already voted ->\n");
+                fclose(fp);
+                return;
+            }
+        }
+        fclose(fp);
+    }
+    // now update it
+    fp=fopen(IPFILE, "a");
+    fprintf(fp, "%s\n", buf);
+    fclose(fp);
+
+    // now go ahead and process the passed in votes
     cnt = load_projects();
 
     while (fgets(buf, sizeof(buf), stdin) != NULL) {
@@ -294,7 +340,8 @@ void add_vote(int argc, char *argv[]) {
             proj = atoi(buf);
             if (proj >= cnt) {
                 printf("Bad index passed. No.\n");
-                continue;
+                // just stop here
+                break;
             }
         } else {
             // find the project in the list
@@ -538,6 +585,17 @@ int main(int argc, char *argv[])
             return 1;
         }
     }
+
+    // set the working directory
+#ifdef WIN32
+    // this is only for debug
+    SetCurrentDirectory("D:\\work\\SurveyWalrus\\sw");
+#else
+    if (chdir("/home/tursilion/surveywalrus/sw")) {
+        printf("Can't get to working directory. Code %d\n", errno);
+        return 1;
+    }
+#endif
 
     // do what we're told to do
     if (argc<2) {
