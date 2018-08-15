@@ -493,7 +493,7 @@ void generate_table(int argc, char *argv[]) {
     printf("Loaded %d systems...\n", num_systems);
 
     // html output
-    printf("<form action=\"/private-cgi/walrus.php\" method==\"post\">\n");
+    printf("<form action=\"/private-cgi/walrus.php\" method=\"post\">\n");
     printf("<table style=\"width:100%%\" border=\"1\">\n");
     printf("<tr>\n");
     printf("<th align=\"left\">Project</th> \n");
