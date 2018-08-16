@@ -300,6 +300,11 @@ void add_vote(int argc, char *argv[]) {
             --idx;  // to account for the pending increment
         }
     }
+    if (strlen(buf) < 1) {
+        // no ip address, ignore the input
+        printf("You didn't say where you are calling from!!\n");
+        return;
+    }
     FILE *fp = fopen(IPFILE, "r");
     if (NULL != fp) {
         // we have one, so scan it
