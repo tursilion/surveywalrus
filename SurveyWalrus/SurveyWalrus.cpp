@@ -280,7 +280,7 @@ void add_vote(int argc, char *argv[]) {
 
     // first check whether this IP is already in use
     // since we can't trust the input, we keep only the digits
-    if (argc < 2) {
+    if (argc < 3) {
         // no ip address, ignore the input
         printf("You didn't say where you are calling from!\n");
         return;
