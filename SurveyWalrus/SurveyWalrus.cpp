@@ -286,7 +286,7 @@ void add_vote(int argc, char *argv[]) {
         return;
     }
     // reuse fn and buf for this...
-    strncpy(buf, argv[1], sizeof(buf));
+    strncpy(buf, argv[2], sizeof(buf));
     buf[sizeof(buf)-1]='\0';
     for (unsigned int idx=0; idx<strlen(buf); ++idx) {
         if (buf[idx]=='.') {
@@ -503,13 +503,13 @@ void get_scores(int argc, char *argv[]) {
 
     if (isHtml) {
         // html output
-        printf("<table style=\"width:100%%\">\n");
+        printf("<table>\n");
         printf("<tr>\n");
-        printf("<th align=\"left\">Project</th> <th align=\"left\">Score</th>\n");
+        printf("<th class=\"align_left\">Project</th> <th>Score</th>\n");
         for (int idx=0; idx<num_systems; ++idx) {
             char *p = systems[idx] + strlen(systems[idx]) + 1;
             if (p > systems[idx]+127) p = "";
-            printf("<th align=\"left\"><div class=\"system\">%s\n", systems[idx]);
+            printf("<th><div class=\"system\">%s\n", systems[idx]);
             printf("  <span class=\"tooltiptext\">%s</span>\n", p);
             printf("</div></th>\n");
         }
@@ -567,13 +567,13 @@ void generate_table(int argc, char *argv[]) {
 
     // html output
     printf("<form action=\"/cgi-bin/walrusscore.cgi\" method=\"post\">\n");
-    printf("<table style=\"width:100%%\" border=\"1\">\n");
+    printf("<table border=\"1\">\n");
     printf("<tr>\n");
-    printf("<th align=\"left\">Project</th> \n");
+    printf("<th class=\"align_left\">Project</th> \n");
     for (int idx=0; idx<num_systems; ++idx) {
         char *p = systems[idx] + strlen(systems[idx]) + 1;
         if (p > systems[idx]+127) p = "";
-        printf("<th align=\"left\"><div class=\"tooltip\">%s\n", systems[idx]);
+        printf("<th><div class=\"tooltip\">%s\n", systems[idx]);
         printf("  <span class=\"tooltiptext\">%s</span>\n", p);
         printf("</div></th>\n");
     }
@@ -587,12 +587,12 @@ void generate_table(int argc, char *argv[]) {
         printf("<span class=\"tooltiptext\">%s</span>", p);
         printf("</div></td>");
         for (int i2=0; i2<num_systems; ++i2) {
-            printf("<td><input type=\"checkbox\" name=\"%04d_%04d\" value=\"1\"> </td> ", idx, i2);
+            printf("<td class=\"align_center\"><input type=\"checkbox\" name=\"%04d_%04d\" value=\"1\"> </td> ", idx, i2);
         }
         printf("</tr>\n");
     }
     printf("</table>\n");
-    printf("<input type=\"submit\" value=\"Submit\">\n");
+    printf("<br><input class=\"button_submit\" type=\"submit\" value=\"Submit\">\n");
     printf("</form>\n");
 }
 

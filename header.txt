@@ -1,0 +1,103 @@
+<html>
+<style>
+/* background picture */
+body {
+	background-image: url("/omni/faded.jpg");
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+	background-size: cover;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+td,th {
+  padding: 0.125em 0.5em 0.25em 0.5em;
+  line-height: 1;
+  text-align: right;
+}
+
+/* override alignment */
+.align_left {
+  text-align: left; 
+}
+.align_center {
+  text-align: center; 
+}
+.button_submit {
+    width: 20%;
+    min-width: 100px;
+}
+
+/* Tooltip container */
+.tooltip {
+    position: relative;
+    display: inherit;
+    border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+    text-align: left;
+}
+
+.system {
+    position: relative;
+    display: inline-block;
+    vertical-align: bottom;
+    writing-mode: vertical-lr;
+    text-orientation: mixed;
+    transform: translate(0.5em,0em) rotate(220deg);
+}
+
+
+/* Tooltip text */
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+ 
+    /* Position the tooltip text - see examples below! */
+    position: absolute;
+    z-index: 1;
+}
+
+/* Tooltip text */
+.system .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+
+    /* undo rotation */
+    writing-mode: horizontal-tb;
+    transform: translate(-4.0em,1.0em) rotate(-220deg);
+ 
+    /* Position the tooltip text - see examples below! */
+    position: absolute;
+    z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}
+.system:hover .tooltiptext {
+    visibility: visible;
+}
+</style>
+<head>
+<title>Welcome to SurveyWalrus!</title>
+<body>
+<h1>SurveyWalrus!</h1>
+
+<li>This is Tursi's task list, crowd-sourced to help decide which project to do next!</li>
+<li>Projects down the left, systems across the top. Hover for tooltip information!</li>
+<li>Old scores were imported by hand and bad votes were generally just discarded.</li>
+<li>Scores are relative (1000 is top) and based on total votes and timing of votes (more recent votes are worth more than old votes).</li>
+<li>System scores are a raw total count of votes and are only a guideline. They will influence but not demand the result of the project.</li>
+<br>
