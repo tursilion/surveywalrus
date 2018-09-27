@@ -567,9 +567,10 @@ void generate_table(int argc, char *argv[]) {
 
     // html output
     printf("<form action=\"/cgi-bin/walrusscore.cgi\" method=\"post\">\n");
-    printf("<table border=\"1\">\n");
+    printf("<table border=\"1\" id=\"mytable\">\n");
     printf("<tr>\n");
-    printf("<th class=\"align_left\">Project</th> \n");
+    printf("<th class=\"align_left\" onclick=\"toggleColumn()\">Project</th> \n");
+    printf("<th class=\"col_desc\" onclick=\"toggleColumn()\">Description (click to hide)</th> \n");
     for (int idx=0; idx<num_systems; ++idx) {
         char *p = systems[idx] + strlen(systems[idx]) + 1;
         if (p > systems[idx]+127) p = "";
@@ -586,6 +587,8 @@ void generate_table(int argc, char *argv[]) {
         printf("<td><div class=\"tooltip\">%s", projects[idx]);
         printf("<span class=\"tooltiptext\">%s</span>", p);
         printf("</div></td>");
+      	// reprint the description in a hidable column - tooltip still works
+	printf("<td class=\"col_desc\">%s</td>", p);
         for (int i2=0; i2<num_systems; ++i2) {
             printf("<td class=\"align_center\"><input type=\"checkbox\" name=\"%04d_%04d\" value=\"1\"> </td> ", idx, i2);
         }

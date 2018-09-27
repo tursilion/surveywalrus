@@ -89,15 +89,40 @@ td,th {
 .system:hover .tooltiptext {
     visibility: visible;
 }
+
+/* hideable description column */
+.col_desc {
+    text-align: left;
+    display: table-cell;
+}
+table.hide .col_desc { 
+    text-align: left;
+    display: none; 
+}
 </style>
+
+<script>
+function toggleColumn() {
+    var currentClass = document.getElementById("mytable").className;
+    if (currentClass.indexOf("hide") != -1) {
+        document.getElementById("mytable").className = currentClass.replace("hide", "");
+    }
+    else {
+        document.getElementById("mytable").className += " " + "hide";
+    }
+}
+</script>
+
+
 <head>
 <title>Welcome to SurveyWalrus!</title>
 <body>
 <h1>SurveyWalrus!</h1>
 
 <li>This is Tursi's task list, crowd-sourced to help decide which project to do next!</li>
-<li>Projects down the left, systems across the top. Hover for tooltip information!</li>
-<li>Old scores were imported by hand and bad votes were generally just discarded.</li>
+<li>You can vote once per day - resets at midnight Central time</li>
+<li>To vote, just click on the project/system combination you'd like to see worked on.</li>
+<li>Hover for tooltip information! Projects down the left, systems across the top.</li>
 <li>Scores are relative (1000 is top) and based on total votes and timing of votes (more recent votes are worth more than old votes).</li>
 <li>System scores are a raw total count of votes and are only a guideline. They will influence but not demand the result of the project.</li>
 <br>
