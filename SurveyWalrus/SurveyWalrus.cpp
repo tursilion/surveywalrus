@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 
 #define LOCK "lockfile"
 #define SYSTEMS "systems.txt"
@@ -399,7 +400,7 @@ void add_vote(int argc, char *argv[]) {
     }
 }
 
-// qsort helper function
+// qsort helper functions
 int sortscore(const void *a, const void *b) {
     // struct _scores {
     //     int scoring[MAX_ENTITIES];  // projects to systems, 1 point each (256k!)
@@ -507,7 +508,7 @@ void get_scores(int argc, char *argv[]) {
         printf("<tr>\n");
         printf("<th class=\"align_left\">Project</th> <th>Score</th>\n");
         for (int idx=0; idx<num_systems; ++idx) {
-            char *p = systems[idx] + strlen(systems[idx]) + 1;
+            const char *p = systems[idx] + strlen(systems[idx]) + 1;
             if (p > systems[idx]+127) p = "";
             printf("<th><div class=\"system\">%s\n", systems[idx]);
             printf("  <span class=\"tooltiptext\">%s</span>\n", p);
@@ -517,7 +518,7 @@ void get_scores(int argc, char *argv[]) {
 
         for (int idx=0; idx<num_projects; ++idx) {
             printf("<tr>\n");
-            char *p = scores[idx].name + strlen(scores[idx].name) + 1;
+            const char *p = scores[idx].name + strlen(scores[idx].name) + 1;
             if (p > scores[idx].name+127) p = "";
             printf("<td><div class=\"tooltip\">%s", scores[idx].name);
             printf("<span class=\"tooltiptext\">%s</span>", p);
@@ -565,6 +566,21 @@ void generate_table(int argc, char *argv[]) {
     num_systems = load_systems();
     printf("Loaded %d systems...\n", num_systems);
 
+    // random order in order to skew the vote less
+    srand(time(NULL));
+    printf("<!-- Randomizing... -->\n");
+    // allocate a list on the stack
+    int *randidx = (int*)alloca(sizeof(int)*num_projects);
+    for (int idx=0;idx<num_projects;++idx) randidx[idx]=idx;
+    // now randomize it by swapping
+    for (int idx=0;idx<num_projects*4;++idx) {
+      int a=rand()%num_projects;
+      int b=rand()%num_projects;
+      int c=randidx[a];
+      randidx[a]=randidx[b];
+      randidx[b]=c;
+    }    
+
     // html output
     printf("<form action=\"/cgi-bin/walrusscore.cgi\" method=\"post\">\n");
     printf("<table border=\"1\" id=\"mytable\">\n");
@@ -572,7 +588,7 @@ void generate_table(int argc, char *argv[]) {
     printf("<th class=\"align_left\" onclick=\"toggleColumn()\">Project</th> \n");
     printf("<th class=\"col_desc\" onclick=\"toggleColumn()\">Description (click to hide)</th> \n");
     for (int idx=0; idx<num_systems; ++idx) {
-        char *p = systems[idx] + strlen(systems[idx]) + 1;
+        const char *p = systems[idx] + strlen(systems[idx]) + 1;
         if (p > systems[idx]+127) p = "";
         printf("<th><div class=\"tooltip\">%s\n", systems[idx]);
         printf("  <span class=\"tooltiptext\">%s</span>\n", p);
@@ -580,9 +596,10 @@ void generate_table(int argc, char *argv[]) {
     }
     printf("</tr>\n\n");
 
-    for (int idx=0; idx<num_projects; ++idx) {
+    for (int ix=0; ix<num_projects; ++ix) {
+	int idx = randidx[ix];
         printf("<tr>\n");
-        char *p = projects[idx] + strlen(projects[idx]) + 1;
+        const char *p = projects[idx] + strlen(projects[idx]) + 1;
         if (p > projects[idx]+127) p = "";
         printf("<td><div class=\"tooltip\">%s", projects[idx]);
         printf("<span class=\"tooltiptext\">%s</span>", p);
