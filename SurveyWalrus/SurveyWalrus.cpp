@@ -55,6 +55,7 @@ struct _scores {
     char name[128];
     int scoring[MAX_ENTITIES];  // projects to systems, 1 point each (256k!)
     int ranking;                // projects - weighted score
+    int count;                  // raw count of scored lines
 } scores[MAX_ENTITIES];
 
 int getLock() {
@@ -405,6 +406,7 @@ int sortscore(const void *a, const void *b) {
     // struct _scores {
     //     int scoring[MAX_ENTITIES];  // projects to systems, 1 point each (256k!)
     //     int ranking;                // projects - weighted score
+    //     int count;                  // raw count of scored lines
     // } scores[MAX_ENTITIES];
     return ((struct _scores *)b)->ranking - ((struct _scores *)a)->ranking;
 }
@@ -427,12 +429,32 @@ void get_scores(int argc, char *argv[]) {
     num_systems = load_systems();
     printf("Loaded %d systems...\n", num_systems);
 
+    int iplines = 0;
+    char fn[128];
+    FILE *fp = fopen(IPFILE, "r");
+    if (NULL != fp) {
+        // we have one, so scan it
+        while (!feof(fp)) {
+            if (NULL == fgets(fn, sizeof(fn), fp)) {
+                break;            
+            }
+            ++iplines;
+        }
+        fclose(fp);                  
+    }
+
     if (isHtml) printf("<br>\n");
+    
+    if (iplines > 0) {
+      printf("%d vote(s) today\n", iplines);
+      if (isHtml) printf("<br>\n", iplines);
+    }
 
     // we need a 2D array - projects to systems. 
     // struct _scores {
     //     int scoring[MAX_ENTITIES];  // projects to systems, 1 point each (256k!)
     //     int ranking;                // projects - weighted score
+    //     int count;                  // raw count of scored lines
     // } scores[MAX_ENTITIES];
     memset(scores, 0, sizeof(scores));
 
@@ -481,8 +503,10 @@ void get_scores(int argc, char *argv[]) {
                 p=strchr(p, ' ');
                 while ((p)&&(*p)&&(*p <= ' ')) ++p;
                 ++sys;
+                if (sys >= num_systems) break;
             }
             scores[proj].ranking += score;
+            if (score>0) scores[proj].count++;
         }
     }
 
@@ -514,6 +538,8 @@ void get_scores(int argc, char *argv[]) {
             printf("  <span class=\"tooltiptext\">%s</span>\n", p);
             printf("</div></th>\n");
         }
+        printf("<th><div class=\"system\">raw\n");
+        printf("</div></th>\n");
         printf("</tr>\n\n");
 
         for (int idx=0; idx<num_projects; ++idx) {
@@ -527,6 +553,7 @@ void get_scores(int argc, char *argv[]) {
             for (int i2=0; i2<num_systems; ++i2) {
                 printf("<td>%5d</td> ", scores[idx].scoring[i2]);
             }
+            printf("<td>%5d</td> ", scores[idx].count);
             printf("</tr>\n");
         }
         printf("</table>\n");
@@ -540,6 +567,7 @@ void get_scores(int argc, char *argv[]) {
         for (int idx=0; idx<num_systems; ++idx) {
             printf("%5.5s ", systems[idx]);
         }
+        printf("%5.5s ", "raw");
         printf("\n\n");
         for (int idx=0; idx<num_projects; ++idx) {
             printf("%-10.10s ", scores[idx].name);
@@ -547,6 +575,7 @@ void get_scores(int argc, char *argv[]) {
             for (int i2=0; i2<num_systems; ++i2) {
                 printf("%5d ", scores[idx].scoring[i2]);
             }
+            printf("%5d ", scores[idx].count);
             printf("\n");
         }
         printf("\n");
@@ -556,6 +585,7 @@ void get_scores(int argc, char *argv[]) {
 // generate the HTML form with all the checkboxes needed
 void generate_table(int argc, char *argv[]) {
     int num_projects, num_systems;
+    int headerCount = 15;
 
     // get labels into memory
     // so we need to read the list of projects first
@@ -579,7 +609,7 @@ void generate_table(int argc, char *argv[]) {
       int c=randidx[a];
       randidx[a]=randidx[b];
       randidx[b]=c;
-    }    
+    }
 
     // html output
     printf("<form action=\"/cgi-bin/walrusscore.cgi\" method=\"post\">\n");
@@ -597,6 +627,21 @@ void generate_table(int argc, char *argv[]) {
     printf("</tr>\n\n");
 
     for (int ix=0; ix<num_projects; ++ix) {
+	if (--headerCount < 1) {
+            // repeat header, slightly simplified
+            printf("<tr>\n");
+            printf("<th class=\"align_left\">Project</th> \n");
+            printf("<th class=\"col_desc\">Description</th> \n");
+            for (int idx=0; idx<num_systems; ++idx) {
+                const char *p = systems[idx] + strlen(systems[idx]) + 1;
+                if (p > systems[idx]+127) p = "";
+                printf("<th><div class=\"tooltip\">%s\n", systems[idx]);
+                printf("  <span class=\"tooltiptext\">%s</span>\n", p);
+                printf("</div></th>\n");
+            }
+            printf("</tr>\n\n");
+            headerCount = 15;
+        }
 	int idx = randidx[ix];
         printf("<tr>\n");
         const char *p = projects[idx] + strlen(projects[idx]) + 1;
