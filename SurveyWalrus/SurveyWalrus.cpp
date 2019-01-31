@@ -54,8 +54,9 @@ char systems[MAX_ENTITIES][128];
 struct _scores {
     char name[128];
     int scoring[MAX_ENTITIES];  // projects to systems, 1 point each (256k!)
-    int ranking;                // projects - weighted score
+    int ranking;                // projects - unweighted score
     int count;                  // raw count of scored lines
+    int linecount;		// number of lines in the scoring file
 } scores[MAX_ENTITIES];
 
 int getLock() {
@@ -405,8 +406,9 @@ void add_vote(int argc, char *argv[]) {
 int sortscore(const void *a, const void *b) {
     // struct _scores {
     //     int scoring[MAX_ENTITIES];  // projects to systems, 1 point each (256k!)
-    //     int ranking;                // projects - weighted score
+    //     int ranking;                // projects - unweighted score
     //     int count;                  // raw count of scored lines
+    //	   int linecount;              // number of lines in the scoring file
     // } scores[MAX_ENTITIES];
     return ((struct _scores *)b)->ranking - ((struct _scores *)a)->ranking;
 }
@@ -436,25 +438,26 @@ void get_scores(int argc, char *argv[]) {
         // we have one, so scan it
         while (!feof(fp)) {
             if (NULL == fgets(fn, sizeof(fn), fp)) {
-                break;            
+                break;
             }
             ++iplines;
         }
-        fclose(fp);                  
+        fclose(fp);
     }
 
     if (isHtml) printf("<br>\n");
-    
+
     if (iplines > 0) {
       printf("%d vote(s) today\n", iplines);
       if (isHtml) printf("<br>\n", iplines);
     }
 
-    // we need a 2D array - projects to systems. 
+    // we need a 2D array - projects to systems.
     // struct _scores {
     //     int scoring[MAX_ENTITIES];  // projects to systems, 1 point each (256k!)
-    //     int ranking;                // projects - weighted score
+    //     int ranking;                // projects - unweighted score
     //     int count;                  // raw count of scored lines
+    //	   int linecount;              // number of lines in the scoring file
     // } scores[MAX_ENTITIES];
     memset(scores, 0, sizeof(scores));
 
@@ -506,6 +509,7 @@ void get_scores(int argc, char *argv[]) {
                 if (sys >= num_systems) break;
             }
             scores[proj].ranking += score;
+            scores[proj].linecount = line;
             if (score>0) scores[proj].count++;
         }
     }
@@ -538,8 +542,6 @@ void get_scores(int argc, char *argv[]) {
             printf("  <span class=\"tooltiptext\">%s</span>\n", p);
             printf("</div></th>\n");
         }
-        printf("<th><div class=\"system\">raw\n");
-        printf("</div></th>\n");
         printf("</tr>\n\n");
 
         for (int idx=0; idx<num_projects; ++idx) {
@@ -553,8 +555,8 @@ void get_scores(int argc, char *argv[]) {
             for (int i2=0; i2<num_systems; ++i2) {
                 printf("<td>%5d</td> ", scores[idx].scoring[i2]);
             }
-            printf("<td>%5d</td> ", scores[idx].count);
             printf("</tr>\n");
+            printf("<!-- %10.10s - raw score=%d, votes=%d, lines=%d -->\n", scores[idx].name, scores[idx].ranking, scores[idx].count, scores[idx].linecount);
         }
         printf("</table>\n");
 
@@ -568,6 +570,8 @@ void get_scores(int argc, char *argv[]) {
             printf("%5.5s ", systems[idx]);
         }
         printf("%5.5s ", "raw");
+        printf("%5.5s ", "count");
+        printf("%5.5s ", "lines");
         printf("\n\n");
         for (int idx=0; idx<num_projects; ++idx) {
             printf("%-10.10s ", scores[idx].name);
@@ -575,7 +579,9 @@ void get_scores(int argc, char *argv[]) {
             for (int i2=0; i2<num_systems; ++i2) {
                 printf("%5d ", scores[idx].scoring[i2]);
             }
+            printf("%5d ", scores[idx].ranking);
             printf("%5d ", scores[idx].count);
+            printf("%5d ", scores[idx].linecount);
             printf("\n");
         }
         printf("\n");
