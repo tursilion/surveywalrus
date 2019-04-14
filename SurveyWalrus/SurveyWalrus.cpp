@@ -6,6 +6,7 @@
 // One file of systems
 // Each project has a voting file
 // Each system has a column in the voting file (missing columns mean 0)
+// For now, a project name that starts with a ~ is excluded from scoring
 //
 // Commands are:
 // add_system <name> <description>
@@ -134,6 +135,11 @@ void add_project(int argc, char *argv[]) {
 
     if (isdigit(argv[2][0])) {
         printf("No. Projects can't start with numbers.\n");
+        return;
+    }
+
+    if (argv[2][0] == '~') {
+        printf("Projects can not start with tilde (~)\n");
         return;
     }
 
@@ -464,15 +470,25 @@ void get_scores(int argc, char *argv[]) {
     // Then we read each project
     // and score it up, and add up the score for each system.
     // Newer stuff has fewer lines, so will automatically end up with a lower score...
+    // project names who start with ~ are not scored and are omitted from output
     for (int proj = 0; proj < num_projects; ++proj) {
         char buf[128];
+
+        memcpy(scores[proj].name, projects[proj], 128);
+        if (projects[proj][0] == '~') {
+	    if (isHtml) {
+		    printf("<!-- Skipping '%s'... -->\n", projects[proj]);
+	    } else {
+	   	    printf("Skipping '%s'...\n", projects[proj]);
+    	    }
+            continue;
+        }
 
 	if (isHtml) {
 		printf("<!-- Checking '%s'... -->\n", projects[proj]);
 	} else {
 		printf("Checking '%s'...\n", projects[proj]);
 	}
-        memcpy(scores[proj].name, projects[proj], 128);
 
         sprintf(buf, PREFIX, proj);
         FILE *fp = fopen(buf, "r");
@@ -545,6 +561,10 @@ void get_scores(int argc, char *argv[]) {
         printf("</tr>\n\n");
 
         for (int idx=0; idx<num_projects; ++idx) {
+            if (scores[idx].name[0]=='~') {
+                printf("<!-- %10.10s - skipped -->\n", scores[idx].name);
+                continue;
+            }
             printf("<tr>\n");
             const char *p = scores[idx].name + strlen(scores[idx].name) + 1;
             if (p > scores[idx].name+127) p = "";
@@ -574,6 +594,9 @@ void get_scores(int argc, char *argv[]) {
         printf("%5.5s ", "lines");
         printf("\n\n");
         for (int idx=0; idx<num_projects; ++idx) {
+            if (scores[idx].name[0] == '~') {
+                continue;
+            }
             printf("%-10.10s ", scores[idx].name);
             printf("%5d ", scores[idx].ranking*1000/max);
             for (int i2=0; i2<num_systems; ++i2) {
@@ -617,7 +640,7 @@ void generate_table(int argc, char *argv[]) {
       randidx[b]=c;
     }
 
-    // html output
+    // html output only
     printf("<form action=\"/cgi-bin/walrusscore.cgi\" method=\"post\">\n");
     printf("<table border=\"1\" id=\"mytable\">\n");
     printf("<tr>\n");
@@ -649,6 +672,11 @@ void generate_table(int argc, char *argv[]) {
             headerCount = 15;
         }
 	int idx = randidx[ix];
+        if (projects[idx][0]=='~') {
+            if (headerCount < 15) ++headerCount;
+            printf("<!-- skipping '%s' -->\n", projects[idx]);
+            continue;
+        }
         printf("<tr>\n");
         const char *p = projects[idx] + strlen(projects[idx]) + 1;
         if (p > projects[idx]+127) p = "";
