@@ -422,7 +422,7 @@ int sortscore(const void *a, const void *b) {
 void get_scores(int argc, char *argv[]) {
     // get_scores
     // the weighting assumes that all projects are scored at the same time
-    int num_projects, num_systems;
+    int num_projects, num_skipped, num_systems;
     int isHtml = 0;
     if ((argc > 2)&&(0 == strcmp(argv[2],"html"))) {
       isHtml = 1;
@@ -431,7 +431,16 @@ void get_scores(int argc, char *argv[]) {
     // get labels into memory
     // so we need to read the list of projects first
     num_projects = load_projects();
-    printf("Loaded %d projects...\n", num_projects);
+
+    // count how many are cancelled so we give a better list count
+    num_skipped = 0;
+    for (int proj = 0; proj < num_projects; ++proj) {
+        if (projects[proj][0] == '~') ++num_skipped;
+    }
+    printf("Loaded %d projects...\n", num_projects-num_skipped);
+    if (isHtml) {
+        printf("<!-- Read %d total, skipped %d -->\n", num_projects, num_skipped);
+    }
 
     // then we read in the list of systems
     num_systems = load_systems();
