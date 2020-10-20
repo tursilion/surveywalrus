@@ -622,13 +622,20 @@ void get_scores(int argc, char *argv[]) {
 
 // generate the HTML form with all the checkboxes needed
 void generate_table(int argc, char *argv[]) {
-    int num_projects, num_systems;
+    int num_projects, num_systems, num_skipped;
     int headerCount = 15;
 
     // get labels into memory
     // so we need to read the list of projects first
     num_projects = load_projects();
-    printf("Loaded %d projects...\n", num_projects);
+
+    // count how many are cancelled so we give a better list count
+    num_skipped = 0;
+    for (int proj = 0; proj < num_projects; ++proj) {
+        if (projects[proj][0] == '~') ++num_skipped;
+    }
+    printf("Loaded %d projects...\n", num_projects-num_skipped);
+    printf("<!-- Read %d total, skipped %d -->\n", num_projects, num_skipped);
 
     // then we read in the list of systems
     num_systems = load_systems();
@@ -650,7 +657,7 @@ void generate_table(int argc, char *argv[]) {
     }
 
     // html output only
-    printf("<form action=\"/cgi-bin/walrusscore.cgi\" method=\"post\">\n");
+    printf("<form action=\"/cgi-bin/walrusscoreb.cgi\" method=\"post\">\n");
     printf("<table border=\"1\" id=\"mytable\">\n");
     printf("<tr>\n");
     printf("<th class=\"align_left\" onclick=\"toggleColumn()\">Project</th> \n");
